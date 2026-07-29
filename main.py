@@ -25,7 +25,7 @@ _redis = None
 async def get_redis():
     global _redis
     if _redis is None:
-        _redis = aioredis.from_url(os.environ["REDIS_URL"], decode_responses=True)
+        _redis = aioredis.from_url(os.environ["REDIS_URL"], decode_responses=True, ssl_cert_reqs=None)
     return _redis
 
 async def _gs(k):
