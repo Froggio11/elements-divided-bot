@@ -21,16 +21,20 @@ LEAGUE_CHANNELS = ["📋-overview","📊-leaderboard","📅-schedule","🤝-free
 app = FastAPI(title="Elements Divided League Bot", version="1.0.0")
 
 # ── Redis ─────────────────────────────────────────────────────────────────
+import redis
 REDIS_URL = os.environ["REDIS_URL"]
-_redis = None
+_redis = redis.from_url(REDIS_URL, ssl_cert_reqs=None, decode_responses=True)
+
+async def _gs(k):
+    return json.loads(_redis.get(f"edl:{k}")) if _redis.get(f"edl:{k}") else None
+
+async def _ss(k, v):
+    _redis.set(f"edl:{k}", json.dumps(v))
+
+async def _ds(k):
+    _redis.delete(f"edl:{k}")
 
 async def get_redis():
-    global _redis
-    if _redis is None:
-        # Upstash requires SSL but skip cert verification
-        _redis = aioredis.from_url(REDIS_URL, ssl_cert_reqs=None, decode_responses=True)
-        # Test connection
-        await _redis.ping()
     return _redis
 
 # ── Ed25519 ───────────────────────────────────────────────────────────────
