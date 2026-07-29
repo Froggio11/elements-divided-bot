@@ -396,23 +396,24 @@ def _opt(opts, name, default=""):
         if o.get("name")==name: return o.get("value",default)
     return default
 
-CMDS = {
-    "setup-league":   lambda g,u,a,t,o: cmd_setup(g,u,a,t),
-    "start-season":   lambda g,u,a,t,o: cmd_start(g,u,a,t),
-    "end-season":     lambda g,u,a,t,o: cmd_end(g,u,a,t),
-    "create-team":    lambda g,u,a,t,o: cmd_cteam(g,u,a,t,_opt(o,"name")),
-    "invite":         lambda g,u,a,t,o: cmd_invite(g,u,a,t,_opt(o,"player")),
-    "kick":           lambda g,u,a,t,o: cmd_kick(g,u,a,t,_opt(o,"player")),
-    "leave-team":     lambda g,u,a,t,o: cmd_leave(g,u,a,t),
-    "register-fa":    lambda g,u,a,t,o: cmd_reg_fa(g,u,a,t),
-    "unregister-fa":  lambda g,u,a,t,o: cmd_unreg_fa(g,u,a,t),
-    "request-fa":     lambda g,u,a,t,o: cmd_req_fa(g,u,a,t),
-    "match-result":   lambda g,u,a,t,o: cmd_match(g,u,a,t,_opt(o,"opponent"),_opt(o,"our-score","0"),_opt(o,"their-score","0")),
-    "leaderboard":    lambda g,u,a,t,o: cmd_lb(g,a,t),
-    "schedule":       lambda g,u,a,t,o: cmd_sched(g,a,t),
-    "team":           lambda g,u,a,t,o: cmd_team_info(g,u,a,t,_opt(o,"name",None)),
-    "overview":       lambda g,u,a,t,o: cmd_overview(g,a,t),
-}
+VALID_CMDS = {"setup-league","start-season","end-season","create-team","invite","kick","leave-team","register-fa","unregister-fa","request-fa","match-result","leaderboard","schedule","team","overview"}
+
+async def dispatch(cmd,g,u,a,t,opts):
+    if cmd=="setup-league":    await cmd_setup(g,u,a,t)
+    elif cmd=="start-season":  await cmd_start(g,u,a,t)
+    elif cmd=="end-season":    await cmd_end(g,u,a,t)
+    elif cmd=="create-team":   await cmd_cteam(g,u,a,t,_opt(opts,"name"))
+    elif cmd=="invite":        await cmd_invite(g,u,a,t,_opt(opts,"player"))
+    elif cmd=="kick":          await cmd_kick(g,u,a,t,_opt(opts,"player"))
+    elif cmd=="leave-team":    await cmd_leave(g,u,a,t)
+    elif cmd=="register-fa":   await cmd_reg_fa(g,u,a,t)
+    elif cmd=="unregister-fa": await cmd_unreg_fa(g,u,a,t)
+    elif cmd=="request-fa":    await cmd_req_fa(g,u,a,t)
+    elif cmd=="match-result":  await cmd_match(g,u,a,t,_opt(opts,"opponent"),_opt(opts,"our-score","0"),_opt(opts,"their-score","0"))
+    elif cmd=="leaderboard":   await cmd_lb(g,a,t)
+    elif cmd=="schedule":      await cmd_sched(g,a,t)
+    elif cmd=="team":          await cmd_team_info(g,u,a,t,_opt(opts,"name",None))
+    elif cmd=="overview":      await cmd_overview(g,a,t)
 
 # ── Endpoints ─────────────────────────────────────────────────────────────
 
@@ -440,9 +441,8 @@ async def interactions(request: Request, bg: BackgroundTasks):
         gid = data.get("guild_id","")
         mem = data.get("member") or data.get("user") or {}
         uid = mem.get("user",{}).get("id","") or mem.get("id","")
-        h = CMDS.get(cmd)
-        if h:
-            bg.add_task(h, gid, uid, os.environ["DISCORD_APP_ID"], tok, cd.get("options",[]))
+       if cmd in VALID_CMDS:
+    bg.add_task(dispatch, cmd, gid, uid, os.environ["DISCORD_APP_ID"], tok, cd.get("options",[]))
             return JSONResponse({"type":5})
         return JSONResponse({"type":4,"data":{"content":f"❓ Unknown: `{cmd}`"}})
     return JSONResponse({"type":1})
