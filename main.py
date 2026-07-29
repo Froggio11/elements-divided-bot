@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 from typing import Any
 
 import httpx
-import redis.asyncio as aioredis
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from nacl.exceptions import BadSignatureError
