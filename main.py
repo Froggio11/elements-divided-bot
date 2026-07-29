@@ -22,7 +22,7 @@ app = FastAPI(title="Elements Divided League Bot", version="1.0.0")
 # ── Redis ─────────────────────────────────────────────────────────────────
 import redis
 REDIS_URL = os.environ["REDIS_URL"]
-_redis = redis.from_url(REDIS_URL, ssl_cert_reqs=None, decode_responses=True)
+_redis = redis.from_url(REDIS_URL, decode_responses=True)
 
 async def _gs(k):
     return json.loads(_redis.get(f"edl:{k}")) if _redis.get(f"edl:{k}") else None
